@@ -3,11 +3,43 @@ from bs4 import BeautifulSoup
 import re
 from multiprocessing import Process, Queue
 import excel_file
-
+import subprocess
 
 person_profile_list = []
 q1 = Queue()
 q2 = Queue()
+
+
+def get_chrome_install_location(browser):
+
+    command = f'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\\{browser}.exe'
+    try:
+        # Run the reg query command
+        result = subprocess.run(
+            ['reg', 'query', command, '/ve'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        output = result.stdout
+        
+        # Parse the output to find the line that contains the default value
+        for line in output.splitlines():
+            if '(Default)' in line:
+                # The path will be after the last space in the line
+                install_location = line.split('    ')[-1].strip()
+                
+                path = install_location
+                x = path.split('\\')
+                path = "\\\\".join(x)
+                print(path)
+                return path
+                
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e}")
+        return False
+
+
 
 def check_email(email):
 
@@ -18,6 +50,7 @@ def check_email(email):
     else:
         return False
     
+
 def check_id(id):
 
     # try catch is for if variable id contains any alphabets
@@ -31,12 +64,17 @@ def check_id(id):
     else:
         return False
 
+
 def person_profile(username, password, link):
     
     global file_name
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless= True, slow_mo=50)
+        try:
+            browser = p.chromium.launch(headless= True, slow_mo=50, executable_path= chrome_path)
+        except:
+            browser = p.chromium.launch(headless= True, slow_mo=50, executable_path= edge_path)
+
         page = browser.new_page()
         page.goto("https://lms.uiu.ac.bd/login/index.php")
         page.fill('input#username', username)
@@ -113,10 +151,10 @@ def task_divider(username, password, links):
     n2 = n1 + l//4
     n3 = n2 + l//4
 
-    a = Process(target= get_individual_info, args= (0, n1, username, password, person_profile_list, q1, ))
-    b = Process(target= get_individual_info, args= (n1, n2, username, password, person_profile_list, q1, ))
-    c = Process(target= get_individual_info, args= (n2, n3, username, password, person_profile_list, q2, ))
-    d = Process(target= get_individual_info, args= (n3, l, username, password, person_profile_list, q2, ))
+    a = Process(target= get_individual_info, args= (0, n1, username, password, person_profile_list, q1, chrome_path, edge_path))
+    b = Process(target= get_individual_info, args= (n1, n2, username, password, person_profile_list, q1, chrome_path, edge_path))
+    c = Process(target= get_individual_info, args= (n2, n3, username, password, person_profile_list, q2, chrome_path, edge_path))
+    d = Process(target= get_individual_info, args= (n3, l, username, password, person_profile_list, q2, chrome_path, edge_path))
 
     a.start()
     b.start()
@@ -130,11 +168,16 @@ def task_divider(username, password, links):
 
 
 
-def get_individual_info(start, end, username, password, lists, queue):
+def get_individual_info(start, end, username, password, lists, queue, chrome_path, edge_path):
 
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless= True, slow_mo=50)
+        try:
+            browser = p.chromium.launch(headless= True, slow_mo=50, executable_path= chrome_path)
+        except:
+            browser = p.chromium.launch(headless= True, slow_mo=50, executable_path= edge_path)
+           
+
         page = browser.new_page()
         link = "https://lms.uiu.ac.bd/login/index.php"
         page.goto(link)
@@ -174,8 +217,19 @@ def get_individual_info(start, end, username, password, lists, queue):
                     queue.put(di)
             except Exception as e:
                 print(e)
-        
+
+
+    
 def main(username, password, link):
+
+    global chrome_path
+    global edge_path
+
+    chrome_path = get_chrome_install_location('chrome')
+    edge_path = get_chrome_install_location('msedge')
+
+    if(chrome_path == False and edge_path == False):
+        return 10
 
     a = person_profile(username, password, link)
     

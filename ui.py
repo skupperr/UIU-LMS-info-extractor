@@ -5,8 +5,20 @@ import webbrowser
 import backbone
 import threading
 from multiprocessing import freeze_support
+import os
+import sys
 
 freeze_support()
+
+def resource_path2(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 
 def callback(url):
    webbrowser.open_new_tab(url)
@@ -35,7 +47,7 @@ def about():
 
     l = Label(frame1, text= "Developed by:", font=("Arial", 12), bg="#211F1E", fg= "White")
     l.grid(row= 0, column= 0)
-    img= ImageTk.PhotoImage(file = 'D:\\Python\\Web Scrapping\\LMS email extractor\\abc.png')
+    img= ImageTk.PhotoImage(file = resource_path2('abc.png'))
     img_label= Label(frame1, image= img, bg="#211F1E")
     img_label.grid(row=1, column= 0)
     name = Label(frame1, text= "ASIF U. AHMED", font= ("Helvetica", 10), bg="#211F1E", fg= "White").grid(row= 3, column=0)
@@ -87,6 +99,9 @@ def execute(username, password, link):
         process_label.config(text='')
     elif(a == 5):
         messagebox.showerror("Error",  "Invalid link.")
+        process_label.config(text='')
+    elif(a == 10):
+        messagebox.showerror("Error",  "Chrome or MSedge was not found.")
         process_label.config(text='')
     else:
         messagebox.showinfo("Success", "Informations retrieved successfully.")
@@ -165,7 +180,7 @@ def tutorial():
 
 
 def gui():
-    global show_image, hide_image, body_frame, ig, fb, ld, git, window, gif_image, loading_frame
+    global show_image, hide_image, body_frame, ig, fb, ld, git, window, loading_frame
 
     window = Tk()
     window.geometry("480x250")
@@ -173,17 +188,13 @@ def gui():
     window.configure(bg="white")
     window.title("LMS Info Extractor")
 
-    show_image = ImageTk.PhotoImage(file = 'D:\\Python\\Web Scrapping\\LMS email extractor\\show.png')
-    hide_image = ImageTk.PhotoImage(file = 'D:\\Python\\Web Scrapping\\LMS email extractor\\hide.png')
-    ig = ImageTk.PhotoImage(file ="D:\\Python\\Web Scrapping\\LMS email extractor\\instagram.png")
-    fb = ImageTk.PhotoImage(file ="D:\\Python\\Web Scrapping\\LMS email extractor\\facebook.png")
-    ld = ImageTk.PhotoImage(file ="D:\\Python\\Web Scrapping\\LMS email extractor\\linkedin.png")
-    git = ImageTk.PhotoImage(file ="D:\\Python\\Web Scrapping\\LMS email extractor\\github.png")
-    show_image = ImageTk.PhotoImage(file = 'D:\\Python\\Web Scrapping\\LMS email extractor\\show.png')
-    hide_image = ImageTk.PhotoImage(file = 'D:\\Python\\Web Scrapping\\LMS email extractor\\hide.png')
+    show_image = ImageTk.PhotoImage(file = resource_path2('show.png'))
+    hide_image = ImageTk.PhotoImage(file = resource_path2('hide.png'))
+    ig = ImageTk.PhotoImage(file = resource_path2("instagram.png"))
+    fb = ImageTk.PhotoImage(file = resource_path2("facebook.png"))
+    ld = ImageTk.PhotoImage(file = resource_path2("linkedin.png"))
+    git = ImageTk.PhotoImage(file = resource_path2("github.png"))
 
-    gif_image = "D:\\Python\\Web Scrapping\\LMS email extractor\\giff.gif"
-    
 
     myMenu=Menu(window)
     window.config(menu= myMenu)
